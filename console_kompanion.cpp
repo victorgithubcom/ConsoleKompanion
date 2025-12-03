@@ -49,8 +49,8 @@ void showMenu() {
     cout << "14) Log View\n";
     cout << "15) System Health (Disk + Uptime)\n";
     cout << "16) Describe a Command\n";
-    cout << "16) Favorites\n";
-    cout << "17) Exit\n";
+    cout << "17) Favorites\n";
+    cout << "18) Exit\n";
     cout << "Choice: ";
 }
 
