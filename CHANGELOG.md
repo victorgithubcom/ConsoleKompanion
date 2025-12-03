@@ -33,15 +33,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - System Services (OpenRC)
   - System Monitoring
   - Customization (config file support)
+  - Favorites Menu
+  - Update Checker
+  - Log Viewer
+  - Splash Screen
   - Exit
 - Default configuration file (`kompanion.conf`) with editor and folder settings.
 - GPLv3 license compliance with LICENSE file and notices.
 
 ### Changed
 - N/A (first release).
-
-### Added
-- Update Checker [Option 13]
 
 ### Fixed
 - N/A (first release).
