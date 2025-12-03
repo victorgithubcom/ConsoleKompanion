@@ -6,7 +6,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [Unreleased]
 ### Added
 - Placeholder for upcoming features.
 
@@ -40,6 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - N/A (first release).
+
+### Added
+- Update Checker [Option 13]
 
 ### Fixed
 - N/A (first release).
