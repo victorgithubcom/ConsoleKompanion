@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <limits>
 #include <string>
+#include <vector>
 using namespace std;
 
 // Global defaults
@@ -43,8 +44,85 @@ void showMenu() {
     cout << "11) System monitoring\n";
     cout << "12) Customization\n";
     cout << "13) Update Checker\n";
-    cout << "14) Exit\n";
+    cout << "14) Log View\n";
+    cout << "15) Favorites\n";
+    cout << "16) Exit\n";
     cout << "Choice: ";
+}
+// Store favorite commands as strings
+std::vector<std::string> favorites;
+
+void addFavorite() {
+    cout << "\n=== Add Favorite ===" << endl;
+    cout << "Enter the command or description to save: ";
+    string fav;
+    cin.ignore(); // clear leftover newline
+    getline(cin, fav);
+    favorites.push_back(fav);
+    cout << "Favorite added!" << endl;
+}
+
+void listFavorites() {
+    cout << "\n=== Favorites ===" << endl;
+    if (favorites.empty()) {
+        cout << "No favorites saved yet." << endl;
+        return;
+    }
+    for (size_t i = 0; i < favorites.size(); ++i) {
+        cout << i + 1 << ") " << favorites[i] << endl;
+    }
+}
+
+void favoritesMenu() {
+    int choice;
+    do {
+        cout << "\n=== Favorites Menu ===" << endl;
+        cout << "1) Add a favorite" << endl;
+        cout << "2) List favorites" << endl;
+        cout << "0) Back to main menu" << endl;
+        cout << "Enter choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1: addFavorite(); break;
+            case 2: listFavorites(); break;
+            case 0: cout << "Returning to main menu..." << endl; break;
+            default: cout << "Invalid choice." << endl;
+        }
+    } while (choice != 0);
+}
+void logViewer() {
+    cout << "\n=== Log Viewer ===" << endl;
+    cout << "Select a log to view:" << endl;
+    cout << "1) System log (/var/log/syslog)" << endl;
+    cout << "2) Messages log (/var/log/messages)" << endl;
+    cout << "3) Kernel log (/var/log/kern.log)" << endl;
+    cout << "4) Authentication log (/var/log/auth.log)" << endl;
+    cout << "5) Back to main menu" << endl;
+
+    int choice;
+    cout << "Enter choice: ";
+    cin >> choice;
+
+    switch (choice) {
+        case 1:
+            system("less /var/log/syslog");
+            break;
+        case 2:
+            system("less /var/log/messages");
+            break;
+        case 3:
+            system("less /var/log/kern.log");
+            break;
+        case 4:
+            system("less /var/log/auth.log");
+            break;
+        case 5:
+            cout << "Returning to main menu..." << endl;
+            break;
+        default:
+            cout << "Invalid choice." << endl;
+    }
 }
 void updateChecker() {
     cout << "\n=== Update Checker ===" << endl;
@@ -244,7 +322,9 @@ int main() {
             case 11: systemMonitoring(); break;
             case 12: customization(); break;
             case 13: updateChecker(); break;
-            case 14:
+            case 14: logViewer(); break;
+            case 15: favoritesMenu(); break;
+            case 16:
                 cout << "Goodbye from Console Kompanion!\n";
                 break;
             default:
