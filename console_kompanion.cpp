@@ -42,8 +42,22 @@ void showMenu() {
     cout << "10) System services (OpenRC)\n";
     cout << "11) System monitoring\n";
     cout << "12) Customization\n";
-    cout << "13) Exit\n";
+    cout << "13) Update Checker\n";
+    cout << "14) Exit\n";
     cout << "Choice: ";
+}
+void updateChecker() {
+    cout << "\n=== Update Checker ===" << endl;
+    cout << "Previewing available updates...\n" << endl;
+
+    // Run emerge pretend update
+    int result = system("emerge -pvuD @world");
+
+    if (result != 0) {
+        cout << "Error: Could not run update check. "
+        << "Make sure you have emerge installed and proper permissions."
+        << endl;
+    }
 }
 static const std::string RESET = "\033[0m";
 static const std::string CYAN  = "\033[36m";
@@ -229,7 +243,8 @@ int main() {
             case 10: systemServices(); break;
             case 11: systemMonitoring(); break;
             case 12: customization(); break;
-            case 13:
+            case 13: updateChecker(); break;
+            case 14:
                 cout << "Goodbye from Console Kompanion!\n";
                 break;
             default:
