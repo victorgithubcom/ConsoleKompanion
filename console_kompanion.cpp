@@ -3,6 +3,8 @@
 #include <cstdlib>
 #include <limits>
 #include <string>
+#include <ctime>
+#include <map>
 #include <vector>
 using namespace std;
 
@@ -45,9 +47,77 @@ void showMenu() {
     cout << "12) Customization\n";
     cout << "13) Update Checker\n";
     cout << "14) Log View\n";
-    cout << "15) Favorites\n";
-    cout << "16) Exit\n";
+    cout << "15) System Health (Disk + Uptime)\n";
+    cout << "16) Describe a Command\n";
+    cout << "16) Favorites\n";
+    cout << "17) Exit\n";
     cout << "Choice: ";
+}
+
+void describeCommand() {
+    cout << "\n=== Describe Command ===" << endl;
+    cout << "Enter a command to describe: ";
+    string cmd;
+    cin >> cmd;
+
+    // Dictionary of common commands
+    static map<string, string> descriptions = {
+        {"ls", "Lists directory contents."},
+        {"cd", "Changes the current directory."},
+        {"cp", "Copies files or directories."},
+        {"mv", "Moves or renames files or directories."},
+        {"rm", "Removes files or directories."},
+        {"grep", "Searches text using patterns."},
+        {"cat", "Displays file contents."},
+        {"echo", "Prints text to the terminal."},
+        {"pwd", "Prints the current working directory."},
+        {"man", "Displays the manual page for a command."}
+    };
+
+    auto it = descriptions.find(cmd);
+    if (it != descriptions.end()) {
+        cout << cmd << ": " << it->second << endl;
+    } else {
+        cout << "No built-in description found. Trying 'whatis'...\n";
+        string sysCmd = "whatis " + cmd;
+        system(sysCmd.c_str());
+    }
+}
+
+
+void systemHealth() {
+    cout << "\n=== System Health ===" << endl;
+
+    // Show disk usage
+    cout << "\n-- Disk Usage --" << endl;
+    int diskResult = system("df -h");
+    if (diskResult != 0) {
+        cout << "Error: Could not retrieve disk usage." << endl;
+    }
+
+    // Show uptime
+    cout << "\n-- System Uptime --" << endl;
+    int uptimeResult = system("uptime");
+    if (uptimeResult != 0) {
+        cout << "Error: Could not retrieve system uptime." << endl;
+    }
+}
+
+
+void showQuoteOfTheDay() {
+    const char* quotes[] = {
+        "Keep pushing forward, no matter what.",
+        "Small steps every day lead to big results.",
+        "Your system is strong — and so are you.",
+        "Learning never stops, even in the console.",
+        "Stay curious, stay sharp, stay Kompanion."
+    };
+    int totalQuotes = sizeof(quotes) / sizeof(quotes[0]);
+
+    srand(time(nullptr));
+    int index = rand() % totalQuotes;
+
+    cout << "\nQuote of the Day:\n" << quotes[index] << endl;
 }
 // Store favorite commands as strings
 std::vector<std::string> favorites;
@@ -148,6 +218,7 @@ void showSplashScreen() {
     std::cout << "=====================================\n";
     std::cout << RESET << std::endl;
 }
+
 // --- System Info ---
 void systemInfo() {
     cout << "\n--- System Info ---\n";
@@ -299,6 +370,8 @@ void customization() {
 int main() {
     loadConfig();
     showSplashScreen();
+    showQuoteOfTheDay();
+
     int choice;
     do {
         showMenu();
@@ -308,6 +381,7 @@ int main() {
             continue;
         }
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
         switch(choice) {
             case 1: systemInfo(); break;
             case 2: fileManager(); break;
@@ -323,14 +397,17 @@ int main() {
             case 12: customization(); break;
             case 13: updateChecker(); break;
             case 14: logViewer(); break;
-            case 15: favoritesMenu(); break;
-            case 16:
+            case 15: systemHealth(); break;
+            case 16: describeCommand(); break;
+            case 17: favoritesMenu(); break;
+            case 18:
                 cout << "Goodbye from Console Kompanion!\n";
                 break;
             default:
                 cout << "Invalid choice.\n";
                 break;
         }
-    } while (choice != 13);
+    } while (choice != 16);
+
     return 0;
 }
