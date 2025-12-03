@@ -45,7 +45,17 @@ void showMenu() {
     cout << "13) Exit\n";
     cout << "Choice: ";
 }
+static const std::string RESET = "\033[0m";
+static const std::string CYAN  = "\033[36m";
 
+void showSplashScreen() {
+    std::cout << CYAN;
+    std::cout << "=====================================\n";
+    std::cout << "        Welcome to Kompanion         \n";
+    std::cout << "   A friendly console menu tool      \n";
+    std::cout << "=====================================\n";
+    std::cout << RESET << std::endl;
+}
 // --- System Info ---
 void systemInfo() {
     cout << "\n--- System Info ---\n";
@@ -196,6 +206,7 @@ void customization() {
 
 int main() {
     loadConfig();
+    showSplashScreen();
     int choice;
     do {
         showMenu();
