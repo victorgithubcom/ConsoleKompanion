@@ -5,6 +5,7 @@
 #include <string>
 #include <ctime>
 #include <map>
+#include <chrono>
 #include <vector>
 using namespace std;
 
@@ -48,10 +49,63 @@ void showMenu() {
     cout << "13) Update Checker\n";
     cout << "14) Log View\n";
     cout << "15) System Health (Disk + Uptime)\n";
-    cout << "16) Describe a Command\n";
-    cout << "17) Favorites\n";
-    cout << "18) Exit\n";
+    cout << "16) Session Timer\n";
+    cout << "17) Network Info\n";
+    cout << "18) Calendar Peek\n";
+    cout << "19) Weather Snapshot\n";
+    cout << "20) Memory Usage Summmary\n";
+    cout << "21) Describe a Command\n";
+    cout << "22) Favorites\n";
+    cout << "23) Exit\n";
     cout << "Choice: ";
+}
+
+void networkInfo() {
+    cout << "\n=== Network Info ===" << endl;
+    int result = system("ip a"); // or "ifconfig" if preferred
+    if (result != 0) {
+        cout << "Error: Could not retrieve network info." << endl;
+    }
+}
+
+void calendarPeek() {
+    cout << "\n=== Calendar Peek ===" << endl;
+    int result = system("cal");
+    if (result != 0) {
+        cout << "Error: Could not display calendar." << endl;
+    }
+}
+
+void weatherSnapshot() {
+    cout << "\n=== Weather Snapshot ===" << endl;
+    int result = system("curl -s wttr.in?format=3");
+    if (result != 0) {
+        cout << "Error: Could not retrieve weather." << endl;
+    }
+}
+
+void memoryUsageSummary() {
+    cout << "\n=== Memory Usage Summary ===" << endl;
+    int result = system("free -h");
+    if (result != 0) {
+        cout << "Error: Could not retrieve memory usage." << endl;
+    }
+}
+
+
+auto startTime = chrono::steady_clock::now();
+
+void sessionTimer() {
+    auto now = chrono::steady_clock::now();
+    auto elapsed = chrono::duration_cast<chrono::seconds>(now - startTime).count();
+
+    int hours = elapsed / 3600;
+    int minutes = (elapsed % 3600) / 60;
+    int seconds = elapsed % 60;
+
+    cout << "\n=== Session Timer ===" << endl;
+    cout << "Kompanion has been running for "
+    << hours << "h " << minutes << "m " << seconds << "s." << endl;
 }
 
 void describeCommand() {
@@ -398,16 +452,21 @@ int main() {
             case 13: updateChecker(); break;
             case 14: logViewer(); break;
             case 15: systemHealth(); break;
-            case 16: describeCommand(); break;
-            case 17: favoritesMenu(); break;
-            case 18:
+            case 16: sessionTimer(); break;
+            case 17: networkInfo(); break;
+            case 18: calendarPeek(); break;
+            case 19: weatherSnapshot(); break;
+            case 20: memoryUsageSummary(); break;
+            case 21: describeCommand(); break;
+            case 22: favoritesMenu(); break;
+            case 23:
                 cout << "Goodbye from Console Kompanion!\n";
                 break;
             default:
                 cout << "Invalid choice.\n";
                 break;
         }
-    } while (choice != 18);
+    } while (choice != 23);
 
     return 0;
 }
