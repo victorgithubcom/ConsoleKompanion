@@ -9,6 +9,7 @@
 #include <vector>
 using namespace std;
 
+// Test (For Discord webhook)
 // Global defaults
 string preferredEditor = "nano";
 string defaultFolder = "~";
