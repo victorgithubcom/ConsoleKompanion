@@ -46,3 +46,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 - N/A (first release).
+
+---
+
+## [1.0.1] - 2025-12-03
+### Added 
+- Log Viewer
+- Splash Screen
+- Describe a Command
+- Favorites Menu
+- Network Info Option
+- Session Timer
+- Calendar Peek
+- Weather Snapshot
+- Memory Usage Summary
+
+### Changed
+- N/A
+
+### Fixed
+- N/A
