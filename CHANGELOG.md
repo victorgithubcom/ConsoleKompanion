@@ -6,7 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.0.1] - 2025-12-03 - LATEST RELEASE
+## [1.0.2] - 2025-12-05 - LATEST RELEASE
+### Added
+- Full new UI experience
+- Audit log
+- Sign in/Sgn up system
+- And more!
+
+## [1.0.1] - 2025-12-03
 ### Added 
 - Log Viewer
 - Splash Screen
