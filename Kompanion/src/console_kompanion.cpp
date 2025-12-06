@@ -60,6 +60,109 @@ void signUp(sqlite3* db) {
         cout << RED << "Username already exists.\n" << RESET;
     }
 }
+// --- Network Speed Test ---
+void networkSpeedTest() {
+    cout << CYAN << "\n=== Network Speed Test ===\n" << RESET;
+    system("speedtest-cli"); // requires speedtest-cli installed
+    audit(currentUser, "Network speed test");
+}
+
+// --- Battery Status ---
+void batteryStatus() {
+    cout << CYAN << "\n=== Battery Status ===\n" << RESET;
+    system("upower -i $(upower -e | grep BAT)"); // works on most Linux distros
+    audit(currentUser, "Battery status");
+}
+
+// --- Resource Graphs ---
+void resourceGraphs() {
+    cout << CYAN << "\n=== Resource Graphs ===\n" << RESET;
+    // Simple ASCII graph using 'vmstat' or 'top'
+    system("vmstat 1 5");
+    audit(currentUser, "Resource graphs");
+}
+
+// --- Backup Manager ---
+void backupManager() {
+    cout << CYAN << "\n=== Backup Manager ===\n" << RESET;
+    string src, dest;
+    cout << "Enter source folder: "; getline(cin, src);
+    cout << "Enter destination archive (e.g. backup.tar.gz): "; getline(cin, dest);
+    string cmd = "tar -czf " + dest + " " + src;
+    system(cmd.c_str());
+    audit(currentUser, "Backup manager: " + src + " -> " + dest);
+}
+
+// --- Service Restarter ---
+void serviceRestarter() {
+    cout << CYAN << "\n=== Service Restarter ===\n" << RESET;
+    string service;
+    cout << "Enter service name to restart: "; getline(cin, service);
+    string cmd = "systemctl restart " + service;
+    system(cmd.c_str());
+    audit(currentUser, "Service restarter: " + service);
+}
+
+// --- Clipboard Utility ---
+void clipboardUtility() {
+    cout << CYAN << "\n=== Clipboard Utility ===\n" << RESET;
+    cout << "1) Copy text\n2) Paste text\nChoice: ";
+    int choice; cin >> choice; cin.ignore();
+    if (choice == 1) {
+        string text;
+        cout << "Enter text to copy: "; getline(cin, text);
+        string cmd = "echo \"" + text + "\" | xclip -selection clipboard";
+        system(cmd.c_str());
+        audit(currentUser, "Clipboard copy");
+    } else if (choice == 2) {
+        system("xclip -selection clipboard -o");
+        audit(currentUser, "Clipboard paste");
+    }
+}
+
+// --- Download Helper ---
+void downloadHelper() {
+    cout << CYAN << "\n=== Download Helper ===\n" << RESET;
+    string url, dest;
+    cout << "Enter URL: "; getline(cin, url);
+    cout << "Enter destination filename: "; getline(cin, dest);
+    string cmd = "wget -O " + dest + " " + url;
+    system(cmd.c_str());
+    audit(currentUser, "Download helper: " + url);
+}
+
+// --- IP Geolocation ---
+void ipGeolocation() {
+    cout << CYAN << "\n=== IP Geolocation ===\n" << RESET;
+    system("curl -s ipinfo.io");
+    audit(currentUser, "IP geolocation");
+}
+
+// --- Port Scanner ---
+void portScanner() {
+    cout << CYAN << "\n=== Port Scanner ===\n" << RESET;
+    string host;
+    cout << "Enter host to scan: "; getline(cin, host);
+    string cmd = "nmap " + host;
+    system(cmd.c_str());
+    audit(currentUser, "Port scanner: " + host);
+}
+
+// --- Password Generator ---
+void passwordGenerator() {
+    cout << CYAN << "\n=== Password Generator ===\n" << RESET;
+    int length;
+    cout << "Enter desired length: "; cin >> length; cin.ignore();
+    const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    string pass;
+    srand(time(nullptr));
+    for (int i = 0; i < length; i++) {
+        pass += chars[rand() % chars.size()];
+    }
+    cout << GREEN << "Generated password: " << pass << RESET << "\n";
+    audit(currentUser, "Password generator");
+}
+
 
 // --- Login ---
 bool login(sqlite3* db) {
@@ -192,7 +295,11 @@ void showMenu() {
     cout << "9) User management\n10) System services\n11) System monitoring\n12) Customization\n";
     cout << "13) Update Checker\n14) Log View\n15) System Health\n16) Session Timer\n";
     cout << "17) Network Info\n18) Calendar Peek\n19) Weather Snapshot\n20) Memory Usage\n";
-    cout << "21) Describe a Command\n22) Favorites\n23) Exit\n";
+    cout << "21) Network Speed Test\n22) Battery Status(Laptop Only)\n23) Resource Graphs\n";
+    cout << "24) Backup Manager\n25) Service Restart\n26) Clipboard Utilities\n";
+    cout << "27) Download Helper\n28) IP Locator\n29) Port Scanner\n";
+    cout << "30) Password Generator\n";
+    cout << "31) Describe a Command\n32) Favorites\n33) Exit\n";
     cout << YELLOW << "Choice: " << RESET;
 }
 
@@ -258,12 +365,22 @@ int main() {
             case 18: calendarPeek(); break;
             case 19: weatherSnapshot(); break;
             case 20: memoryUsageSummary(); break;
-            case 21: describeCommand(); break;
-            case 22: favoritesMenu(); break;
-            case 23: saveConfig(); cout << GREEN << "Goodbye!\n" << RESET; break;
+            case 21: networkSpeedTest(); break;
+            case 22: batteryStatus(); break;
+            case 23: resourceGraphs(); break;
+            case 24: backupManager(); break;
+            case 25: serviceRestarter(); break;
+            case 26: clipboardUtility(); break;
+            case 27: downloadHelper(); break;
+            case 28: ipGeolocation(); break;
+            case 29: portScanner(); break;
+            case 30: passwordGenerator(); break;
+            case 31: describeCommand(); break;
+            case 32: favoritesMenu(); break;
+            case 33: saveConfig(); cout << GREEN << "Goodbye!\n" << RESET; break;
             default: cout << RED << "Invalid choice.\n" << RESET;
         }
-    } while(menuChoice != 23);
+    } while(menuChoice != 33);
 
     sqlite3_close(db);
     return 0;
