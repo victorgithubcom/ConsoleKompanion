@@ -27,12 +27,12 @@ string timestamp() {
     time_t t = time(nullptr);
     char buf[64];
     strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", localtime(&t));
-    return buf;
+    return string(buf);
 }
 
 string generateID() {
     srand(time(nullptr));
-    return to_string(rand() % 1000000); // 6-digit ID
+    return to_string(rand() % 1000000);
 }
 
 // --- Audit Logging ---
@@ -97,6 +97,7 @@ bool login(sqlite3* db) {
     return false;
 }
 
+
 // --- Config / Favorites ---
 void loadConfig() {
     ifstream in("kompanion.conf");
@@ -159,122 +160,56 @@ void favoritesMenu() {
     } while (choice != 0);
 }
 
-// --- System Commands ---
-void systemInfo() { system("uname -a"); system("uptime"); audit(currentUser,"System info"); }
-void processManager() { system("ps aux --sort=-%mem | head -20"); audit(currentUser,"Process manager"); }
-void resourceGraphs() { system("vmstat 1 5"); audit(currentUser,"Resource graphs"); }
-void batteryStatus() { system("upower -i $(upower -e | grep BAT)"); audit(currentUser,"Battery status"); }
-void systemHealth() { system("df -h"); system("uptime"); audit(currentUser,"System health"); }
+// --- Tutorials ---
+void filesystemBasicsLesson() {
+    cout << CYAN << "\n=== Lesson: Filesystem Basics ===\n" << RESET;
 
-void systemMenu() {
+    cout << GREEN << "Step 1: Listing files\n" << RESET;
+    cout << "Explanation: The 'ls' command lists files in the current directory.\n";
+    cout << "Try running: ls\nPress Enter when ready...";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    system("ls");
+    audit(currentUser, "Lesson step: ls");
+
+    cout << GREEN << "\nStep 2: Current directory\n" << RESET;
+    cout << "Explanation: The 'pwd' command shows your current location.\n";
+    cout << "Try running: pwd\nPress Enter when ready...";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    system("pwd");
+    audit(currentUser, "Lesson step: pwd");
+
+    cout << GREEN << "\nStep 3: Changing directories\n" << RESET;
+    cout << "Explanation: The 'cd' command moves you into another directory.\n";
+    cout << "Try running: cd /tmp && pwd\nPress Enter when ready...";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    system("cd /tmp && pwd");
+    audit(currentUser, "Lesson step: cd");
+
+    cout << YELLOW << "\nQuiz: Which command shows your current directory?\n" << RESET;
+    cout << "a) ls\nb) pwd\nc) cd\nChoice: ";
+    char ans; cin >> ans;
+    if (ans == 'b') cout << GREEN << "Correct!\n" << RESET;
+    else cout << RED << "Not quite — it's 'pwd'.\n" << RESET;
+
+    cout << CYAN << "\nLesson complete!\n" << RESET;
+    audit(currentUser, "Completed lesson: Filesystem Basics");
+}
+
+void tutorialsMenu() {
     int choice;
     do {
-        cout << CYAN << "\n=== System Commands ===\n" << RESET;
-        cout << "1) System Info\n2) Process Manager\n3) Resource Graphs\n4) Battery Status\n5) System Health\n0) Back\n";
+        cout << CYAN << "\n=== Tutorials Menu ===\n" << RESET;
+        cout << "1) Filesystem Basics\n";
+        cout << "0) Back\n";
         cout << YELLOW << "Choice: " << RESET;
-        cin >> choice; cin.ignore();
+        cin >> choice;
         switch(choice) {
-            case 1: systemInfo(); break;
-            case 2: processManager(); break;
-            case 3: resourceGraphs(); break;
-            case 4: batteryStatus(); break;
-            case 5: systemHealth(); break;
+            case 1: filesystemBasicsLesson(); break;
             case 0: break;
             default: cout << RED << "Invalid choice.\n" << RESET;
         }
     } while(choice != 0);
 }
-
-// --- Network Commands ---
-void networkBasics() { system("ip addr show"); audit(currentUser,"Network basics"); }
-void networkInfo() { system("ip a"); audit(currentUser,"Network info"); }
-void networkSpeedTest() { system("speedtest-cli"); audit(currentUser,"Network speed test"); }
-void ipGeolocation() { system("curl -s ipinfo.io"); audit(currentUser,"IP geolocation"); }
-void portScanner() { string host; cout << "Enter host: "; getline(cin, host); system(("nmap " + host).c_str()); audit(currentUser,"Port scanner"); }
-
-void networkMenu() {
-    int choice;
-    do {
-        cout << CYAN << "\n=== Network Commands ===\n" << RESET;
-        cout << "1) Network Basics\n2) Network Info\n3) Speed Test\n4) IP Geolocation\n5) Port Scanner\n0) Back\n";
-        cout << YELLOW << "Choice: " << RESET;
-        cin >> choice; cin.ignore();
-        switch(choice) {
-            case 1: networkBasics(); break;
-            case 2: networkInfo(); break;
-            case 3: networkSpeedTest(); break;
-            case 4: ipGeolocation(); break;
-            case 5: portScanner(); break;
-            case 0: break;
-            default: cout << RED << "Invalid choice.\n" << RESET;
-        }
-    } while(choice != 0);
-}
-
-// --- Utilities ---
-void backupManager() { string src, dest; cout << "Source folder: "; getline(cin, src); cout << "Destination archive: "; getline(cin, dest); system(("tar -czf " + dest + " " + src).c_str()); audit(currentUser,"Backup manager"); }
-void serviceRestarter() {
-    cout << CYAN << "\n=== Service Restarter ===\n" << RESET;
-    string service;
-    cout << "Enter service name to restart: ";
-    getline(cin, service);
-
-    // Gentoo/OpenRC friendly: try systemctl, fallback to rc-service
-    string cmd = "systemctl restart " + service + " 2>/dev/null || rc-service " + service + " restart";
-    system(cmd.c_str());
-
-    audit(currentUser, "Service restarter: " + service);
-}
-
-// --- Clipboard Utility ---
-void clipboardUtility() {
-    cout << CYAN << "\n=== Clipboard Utility ===\n" << RESET;
-    cout << "1) Copy text\n2) Paste text\nChoice: ";
-    int choice; cin >> choice; cin.ignore();
-    if (choice == 1) {
-        string text;
-        cout << "Enter text to copy: ";
-        getline(cin, text);
-        string cmd = "echo \"" + text + "\" | xclip -selection clipboard";
-        system(cmd.c_str());
-        audit(currentUser, "Clipboard copy");
-    } else if (choice == 2) {
-        system("xclip -selection clipboard -o");
-        audit(currentUser, "Clipboard paste");
-    }
-}
-
-// --- Download Helper ---
-void downloadHelper() {
-    cout << CYAN << "\n=== Download Helper ===\n" << RESET;
-    string url, dest;
-    cout << "Enter URL: "; getline(cin, url);
-    cout << "Enter destination filename: "; getline(cin, dest);
-    string cmd = "wget -O " + dest + " " + url;
-    system(cmd.c_str());
-    audit(currentUser, "Download helper: " + url);
-}
-
-
-// --- Password Generator ---
-void passwordGenerator() {
-    cout << CYAN << "\n=== Password Generator ===\n" << RESET;
-    int length;
-    cout << "Enter desired length: "; cin >> length; cin.ignore();
-    const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-    string pass;
-    srand(time(nullptr));
-    for (int i = 0; i < length; i++) {
-        pass += chars[rand() % chars.size()];
-    }
-    cout << GREEN << "Generated password: " << pass << RESET << "\n";
-    audit(currentUser, "Password generator");
-}
-
-// --- Extras ---
-void calendarPeek() { system("cal"); audit(currentUser,"Calendar peek"); }
-void weatherSnapshot() { system("curl -s wttr.in?format=3"); audit(currentUser,"Weather snapshot"); }
-void describeCommand() { cout << "ls: Lists directory contents.\n"; audit(currentUser,"Describe command"); }
 
 // --- Menus ---
 void showMainMenu() {
@@ -284,11 +219,51 @@ void showMainMenu() {
     cout << "3) Utilities\n";
     cout << "4) Extras\n";
     cout << "5) Favorites\n";
-    cout << "6) Exit\n";
+    cout << "6) Tutorials\n";
+    cout << "7) Exit\n";
     cout << YELLOW << "Choice: " << RESET;
 }
+// --- System Menu ---
+void systemMenu() {
+    int choice;
+    do {
+        cout << CYAN << "\n=== System Commands ===\n" << RESET;
+        cout << "1) System Info\n2) Process Manager\n3) Resource Graphs\n4) Battery Status\n5) System Health\n0) Back\n";
+        cout << YELLOW << "Choice: " << RESET;
+        cin >> choice; cin.ignore();
+        switch(choice) {
+            case 1: system("uname -a"); system("uptime"); audit(currentUser,"System info"); break;
+            case 2: system("ps aux --sort=-%mem | head -20"); audit(currentUser,"Process manager"); break;
+            case 3: system("vmstat 1 5"); audit(currentUser,"Resource graphs"); break;
+            case 4: system("upower -i $(upower -e | grep BAT)"); audit(currentUser,"Battery status"); break;
+            case 5: system("df -h"); system("uptime"); audit(currentUser,"System health"); break;
+            case 0: break;
+            default: cout << RED << "Invalid choice.\n" << RESET;
+        }
+    } while(choice != 0);
+}
 
+// --- Network Menu ---
+void networkMenu() {
+    int choice;
+    do {
+        cout << CYAN << "\n=== Network Commands ===\n" << RESET;
+        cout << "1) Network Basics\n2) Network Info\n3) Speed Test\n4) IP Geolocation\n5) Port Scanner\n0) Back\n";
+        cout << YELLOW << "Choice: " << RESET;
+        cin >> choice; cin.ignore();
+        switch(choice) {
+            case 1: system("ip addr show"); audit(currentUser,"Network basics"); break;
+            case 2: system("ip a"); audit(currentUser,"Network info"); break;
+            case 3: system("speedtest-cli"); audit(currentUser,"Network speed test"); break;
+            case 4: system("curl -s ipinfo.io"); audit(currentUser,"IP geolocation"); break;
+            case 5: { string host; cout << "Enter host: "; getline(cin, host); system(("nmap " + host).c_str()); audit(currentUser,"Port scanner"); } break;
+            case 0: break;
+            default: cout << RED << "Invalid choice.\n" << RESET;
+        }
+    } while(choice != 0);
+}
 
+// --- Utilities Menu ---
 void utilitiesMenu() {
     int choice;
     do {
@@ -297,17 +272,18 @@ void utilitiesMenu() {
         cout << YELLOW << "Choice: " << RESET;
         cin >> choice; cin.ignore();
         switch(choice) {
-            case 1: backupManager(); break;
-            case 2: serviceRestarter(); break;
-            case 3: clipboardUtility(); break;
-            case 4: downloadHelper(); break;
-            case 5: passwordGenerator(); break;
+            case 1: { string src, dest; cout << "Source folder: "; getline(cin, src); cout << "Destination archive: "; getline(cin, dest); system(("tar -czf " + dest + " " + src).c_str()); audit(currentUser,"Backup manager"); } break;
+            case 2: { string service; cout << "Enter service name: "; getline(cin, service); string cmd = "systemctl restart " + service + " 2>/dev/null || rc-service " + service + " restart"; system(cmd.c_str()); audit(currentUser,"Service restarter"); } break;
+            case 3: { cout << "Enter text to copy: "; string text; getline(cin, text); string cmd = "echo \"" + text + "\" | xclip -selection clipboard"; system(cmd.c_str()); audit(currentUser,"Clipboard copy"); } break;
+            case 4: { string url, dest; cout << "Enter URL: "; getline(cin, url); cout << "Enter destination filename: "; getline(cin, dest); string cmd = "wget -O " + dest + " " + url; system(cmd.c_str()); audit(currentUser,"Download helper"); } break;
+            case 5: { int length; cout << "Enter desired length: "; cin >> length; cin.ignore(); const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"; string pass; srand(time(nullptr)); for (int i=0;i<length;i++) pass += chars[rand()%chars.size()]; cout << GREEN << "Generated password: " << pass << RESET << "\n"; audit(currentUser,"Password generator"); } break;
             case 0: break;
             default: cout << RED << "Invalid choice.\n" << RESET;
         }
     } while(choice != 0);
 }
 
+// --- Extras Menu ---
 void extrasMenu() {
     int choice;
     do {
@@ -316,14 +292,15 @@ void extrasMenu() {
         cout << YELLOW << "Choice: " << RESET;
         cin >> choice; cin.ignore();
         switch(choice) {
-            case 1: calendarPeek(); break;
-            case 2: weatherSnapshot(); break;
-            case 3: describeCommand(); break;
+            case 1: system("cal"); audit(currentUser,"Calendar peek"); break;
+            case 2: system("curl -s wttr.in?format=3"); audit(currentUser,"Weather snapshot"); break;
+            case 3: cout << "ls: Lists directory contents.\n"; audit(currentUser,"Describe command"); break;
             case 0: break;
             default: cout << RED << "Invalid choice.\n" << RESET;
         }
     } while(choice != 0);
 }
+
 
 // --- Main ---
 int main() {
@@ -342,6 +319,8 @@ int main() {
         loggedIn = login(db);
     } else if (choice == 2) {
         loggedIn = login(db);
+    } else if (choice == 2) {
+        loggedIn = login(db);
     }
 
     if (!loggedIn) {
@@ -355,18 +334,25 @@ int main() {
     int menuChoice;
     do {
         showMainMenu();
-        cin >> menuChoice; cin.ignore();
+        cin >> menuChoice;
+        cin.ignore();
         switch(menuChoice) {
             case 1: systemMenu(); break;
             case 2: networkMenu(); break;
             case 3: utilitiesMenu(); break;
             case 4: extrasMenu(); break;
             case 5: favoritesMenu(); break;
-            case 6: saveConfig(); cout << GREEN << "Goodbye!\n" << RESET; break;
-            default: cout << RED << "Invalid choice.\n" << RESET;
+            case 6: tutorialsMenu(); break;   // NEW Tutorials integration
+            case 7:
+                saveConfig();
+                cout << GREEN << "Goodbye!\n" << RESET;
+                break;
+            default:
+                cout << RED << "Invalid choice.\n" << RESET;
         }
-    } while(menuChoice != 6);
+    } while(menuChoice != 7);
 
     sqlite3_close(db);
     return 0;
 }
+
