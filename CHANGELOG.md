@@ -5,7 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
-## [1.0.3] - 2025-12-05-8:56 - LATEST RELEASE
+
+## [1.1.1] - 2025-12-06 - LATEST RELEASE
+### Added
+- Tutorial Menu
+- (New Updating System, Huge Updated: 1.<number>.<version>)
+- File Management Tutroial
+- New Updated SQLite database system for sign ups and sign ins (stored locally)
+
+## Fixed
+- N/A
+
+## Changed
+- N/A
+
+## [1.0.3] - 2025-12-05-8:56
 ### Added
 - Directories for all commands
 - 10 different commands
