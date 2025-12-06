@@ -6,7 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.1.1] - 2025-12-06 - LATEST RELEASE
+## [1.1.2] - 2025-12-06 - LATEST RELEASE
+### Added
+- Permissions Tutorial
+- Text Editing Tutorial
+
+### Fixed
+- Stopped tutorialMenu from spamming the message when one tutorial is done.
+
+### Changed
+- N/A
+
+
+## [1.1.1] - 2025-12-06
 ### Added
 - Tutorial Menu
 - (New Updating System, Huge Updated: 1.<number>.<version>)
