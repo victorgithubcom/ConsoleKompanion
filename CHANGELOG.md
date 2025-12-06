@@ -13,10 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - File Management Tutroial
 - New Updated SQLite database system for sign ups and sign ins (stored locally)
 
-## Fixed
+### Fixed
 - N/A
 
-## Changed
+### Changed
 - N/A
 
 ## [1.0.3] - 2025-12-05-8:56
