@@ -35,6 +35,21 @@ string generateID() {
     return to_string(rand() % 1000000); // 6-digit ID
 }
 
+// --- Audit Logging ---
+void audit(const string& user, const string& action) {
+    bool newFile = !ifstream("kompanion_audit.log").good();
+    ofstream out("kompanion_audit.log", ios::app);
+    if (newFile) {
+        out << left << setw(20) << "TIMESTAMP"
+        << " | " << setw(12) << "USER"
+        << " | " << "ACTION" << "\n";
+        out << string(60, '-') << "\n";
+    }
+    out << left << setw(20) << timestamp()
+    << " | " << setw(12) << user
+    << " | " << action << "\n";
+}
+
 // --- SQLite Setup ---
 void initDB(sqlite3* &db) {
     if (sqlite3_open("users.db", &db)) {
@@ -47,7 +62,7 @@ void initDB(sqlite3* &db) {
     sqlite3_exec(db, sql, nullptr, nullptr, nullptr);
 }
 
-// --- Sign Up ---
+// --- Sign Up / Login ---
 void signUp(sqlite3* db) {
     cout << CYAN << "Enter new username: " << RESET;
     string username; cin >> username;
@@ -60,111 +75,7 @@ void signUp(sqlite3* db) {
         cout << RED << "Username already exists.\n" << RESET;
     }
 }
-// --- Network Speed Test ---
-void networkSpeedTest() {
-    cout << CYAN << "\n=== Network Speed Test ===\n" << RESET;
-    system("speedtest-cli"); // requires speedtest-cli installed
-    audit(currentUser, "Network speed test");
-}
 
-// --- Battery Status ---
-void batteryStatus() {
-    cout << CYAN << "\n=== Battery Status ===\n" << RESET;
-    system("upower -i $(upower -e | grep BAT)"); // works on most Linux distros
-    audit(currentUser, "Battery status");
-}
-
-// --- Resource Graphs ---
-void resourceGraphs() {
-    cout << CYAN << "\n=== Resource Graphs ===\n" << RESET;
-    // Simple ASCII graph using 'vmstat' or 'top'
-    system("vmstat 1 5");
-    audit(currentUser, "Resource graphs");
-}
-
-// --- Backup Manager ---
-void backupManager() {
-    cout << CYAN << "\n=== Backup Manager ===\n" << RESET;
-    string src, dest;
-    cout << "Enter source folder: "; getline(cin, src);
-    cout << "Enter destination archive (e.g. backup.tar.gz): "; getline(cin, dest);
-    string cmd = "tar -czf " + dest + " " + src;
-    system(cmd.c_str());
-    audit(currentUser, "Backup manager: " + src + " -> " + dest);
-}
-
-// --- Service Restarter ---
-void serviceRestarter() {
-    cout << CYAN << "\n=== Service Restarter ===\n" << RESET;
-    string service;
-    cout << "Enter service name to restart: "; getline(cin, service);
-    string cmd = "systemctl restart " + service;
-    system(cmd.c_str());
-    audit(currentUser, "Service restarter: " + service);
-}
-
-// --- Clipboard Utility ---
-void clipboardUtility() {
-    cout << CYAN << "\n=== Clipboard Utility ===\n" << RESET;
-    cout << "1) Copy text\n2) Paste text\nChoice: ";
-    int choice; cin >> choice; cin.ignore();
-    if (choice == 1) {
-        string text;
-        cout << "Enter text to copy: "; getline(cin, text);
-        string cmd = "echo \"" + text + "\" | xclip -selection clipboard";
-        system(cmd.c_str());
-        audit(currentUser, "Clipboard copy");
-    } else if (choice == 2) {
-        system("xclip -selection clipboard -o");
-        audit(currentUser, "Clipboard paste");
-    }
-}
-
-// --- Download Helper ---
-void downloadHelper() {
-    cout << CYAN << "\n=== Download Helper ===\n" << RESET;
-    string url, dest;
-    cout << "Enter URL: "; getline(cin, url);
-    cout << "Enter destination filename: "; getline(cin, dest);
-    string cmd = "wget -O " + dest + " " + url;
-    system(cmd.c_str());
-    audit(currentUser, "Download helper: " + url);
-}
-
-// --- IP Geolocation ---
-void ipGeolocation() {
-    cout << CYAN << "\n=== IP Geolocation ===\n" << RESET;
-    system("curl -s ipinfo.io");
-    audit(currentUser, "IP geolocation");
-}
-
-// --- Port Scanner ---
-void portScanner() {
-    cout << CYAN << "\n=== Port Scanner ===\n" << RESET;
-    string host;
-    cout << "Enter host to scan: "; getline(cin, host);
-    string cmd = "nmap " + host;
-    system(cmd.c_str());
-    audit(currentUser, "Port scanner: " + host);
-}
-
-// --- Password Generator ---
-void passwordGenerator() {
-    cout << CYAN << "\n=== Password Generator ===\n" << RESET;
-    int length;
-    cout << "Enter desired length: "; cin >> length; cin.ignore();
-    const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-    string pass;
-    srand(time(nullptr));
-    for (int i = 0; i < length; i++) {
-        pass += chars[rand() % chars.size()];
-    }
-    cout << GREEN << "Generated password: " << pass << RESET << "\n";
-    audit(currentUser, "Password generator");
-}
-
-
-// --- Login ---
 bool login(sqlite3* db) {
     cout << CYAN << "Enter username: " << RESET;
     string username; cin >> username;
@@ -186,22 +97,7 @@ bool login(sqlite3* db) {
     return false;
 }
 
-// --- Audit Logging ---
-void audit(const string& user, const string& action) {
-    bool newFile = !ifstream("kompanion_audit.log").good();
-    ofstream out("kompanion_audit.log", ios::app);
-    if (newFile) {
-        out << left << setw(20) << "TIMESTAMP"
-        << " | " << setw(12) << "USER"
-        << " | " << "ACTION" << "\n";
-        out << string(60, '-') << "\n";
-    }
-    out << left << setw(20) << timestamp()
-    << " | " << setw(12) << user
-    << " | " << action << "\n";
-}
-
-// --- Config ---
+// --- Config / Favorites ---
 void loadConfig() {
     ifstream in("kompanion.conf");
     if (!in.is_open()) return;
@@ -222,7 +118,6 @@ void saveConfig() {
     }
 }
 
-// --- Favorites ---
 void addFavorite() {
     cout << CYAN << "\n=== Add Favorite ===\n" << RESET;
     cout << "Enter favorite command: ";
@@ -264,43 +159,170 @@ void favoritesMenu() {
     } while (choice != 0);
 }
 
-// --- Features ---
+// --- System Commands ---
 void systemInfo() { system("uname -a"); system("uptime"); audit(currentUser,"System info"); }
-void fileManager() { system("ls -lh"); audit(currentUser,"File manager"); }
-void packageManager() { system("emerge -pvuD @world"); audit(currentUser,"Package manager"); }
-void networkBasics() { system("ip addr show"); audit(currentUser,"Network basics"); }
-void openEditor() { system((preferredEditor + " test.txt").c_str()); audit(currentUser,"Opened editor"); }
-void searchFiles() { system(("find " + defaultFolder + " -name \"*.txt\"").c_str()); audit(currentUser,"Search files"); }
 void processManager() { system("ps aux --sort=-%mem | head -20"); audit(currentUser,"Process manager"); }
-void diskCleanup() { system(("du -sh " + defaultFolder + "/* | sort -h | tail -20").c_str()); audit(currentUser,"Disk cleanup"); }
-void userManagement() { system("id"); audit(currentUser,"User management"); }
-void systemServices() { system("rc-status"); audit(currentUser,"System services"); }
-void systemMonitoring() { system("htop"); audit(currentUser,"System monitoring"); }
-void customization() { preferredEditor="vim"; saveConfig(); audit(currentUser,"Customization"); }
-void updateChecker() { system("emerge -pvuD @world"); audit(currentUser,"Update checker"); }
-void logViewer() { system("less /var/log/syslog"); audit(currentUser,"Log viewer"); }
+void resourceGraphs() { system("vmstat 1 5"); audit(currentUser,"Resource graphs"); }
+void batteryStatus() { system("upower -i $(upower -e | grep BAT)"); audit(currentUser,"Battery status"); }
 void systemHealth() { system("df -h"); system("uptime"); audit(currentUser,"System health"); }
-void sessionTimer() { cout << "Session running...\n"; audit(currentUser,"Session timer"); }
+
+void systemMenu() {
+    int choice;
+    do {
+        cout << CYAN << "\n=== System Commands ===\n" << RESET;
+        cout << "1) System Info\n2) Process Manager\n3) Resource Graphs\n4) Battery Status\n5) System Health\n0) Back\n";
+        cout << YELLOW << "Choice: " << RESET;
+        cin >> choice; cin.ignore();
+        switch(choice) {
+            case 1: systemInfo(); break;
+            case 2: processManager(); break;
+            case 3: resourceGraphs(); break;
+            case 4: batteryStatus(); break;
+            case 5: systemHealth(); break;
+            case 0: break;
+            default: cout << RED << "Invalid choice.\n" << RESET;
+        }
+    } while(choice != 0);
+}
+
+// --- Network Commands ---
+void networkBasics() { system("ip addr show"); audit(currentUser,"Network basics"); }
 void networkInfo() { system("ip a"); audit(currentUser,"Network info"); }
+void networkSpeedTest() { system("speedtest-cli"); audit(currentUser,"Network speed test"); }
+void ipGeolocation() { system("curl -s ipinfo.io"); audit(currentUser,"IP geolocation"); }
+void portScanner() { string host; cout << "Enter host: "; getline(cin, host); system(("nmap " + host).c_str()); audit(currentUser,"Port scanner"); }
+
+void networkMenu() {
+    int choice;
+    do {
+        cout << CYAN << "\n=== Network Commands ===\n" << RESET;
+        cout << "1) Network Basics\n2) Network Info\n3) Speed Test\n4) IP Geolocation\n5) Port Scanner\n0) Back\n";
+        cout << YELLOW << "Choice: " << RESET;
+        cin >> choice; cin.ignore();
+        switch(choice) {
+            case 1: networkBasics(); break;
+            case 2: networkInfo(); break;
+            case 3: networkSpeedTest(); break;
+            case 4: ipGeolocation(); break;
+            case 5: portScanner(); break;
+            case 0: break;
+            default: cout << RED << "Invalid choice.\n" << RESET;
+        }
+    } while(choice != 0);
+}
+
+// --- Utilities ---
+void backupManager() { string src, dest; cout << "Source folder: "; getline(cin, src); cout << "Destination archive: "; getline(cin, dest); system(("tar -czf " + dest + " " + src).c_str()); audit(currentUser,"Backup manager"); }
+void serviceRestarter() {
+    cout << CYAN << "\n=== Service Restarter ===\n" << RESET;
+    string service;
+    cout << "Enter service name to restart: ";
+    getline(cin, service);
+
+    // Gentoo/OpenRC friendly: try systemctl, fallback to rc-service
+    string cmd = "systemctl restart " + service + " 2>/dev/null || rc-service " + service + " restart";
+    system(cmd.c_str());
+
+    audit(currentUser, "Service restarter: " + service);
+}
+
+// --- Clipboard Utility ---
+void clipboardUtility() {
+    cout << CYAN << "\n=== Clipboard Utility ===\n" << RESET;
+    cout << "1) Copy text\n2) Paste text\nChoice: ";
+    int choice; cin >> choice; cin.ignore();
+    if (choice == 1) {
+        string text;
+        cout << "Enter text to copy: ";
+        getline(cin, text);
+        string cmd = "echo \"" + text + "\" | xclip -selection clipboard";
+        system(cmd.c_str());
+        audit(currentUser, "Clipboard copy");
+    } else if (choice == 2) {
+        system("xclip -selection clipboard -o");
+        audit(currentUser, "Clipboard paste");
+    }
+}
+
+// --- Download Helper ---
+void downloadHelper() {
+    cout << CYAN << "\n=== Download Helper ===\n" << RESET;
+    string url, dest;
+    cout << "Enter URL: "; getline(cin, url);
+    cout << "Enter destination filename: "; getline(cin, dest);
+    string cmd = "wget -O " + dest + " " + url;
+    system(cmd.c_str());
+    audit(currentUser, "Download helper: " + url);
+}
+
+
+// --- Password Generator ---
+void passwordGenerator() {
+    cout << CYAN << "\n=== Password Generator ===\n" << RESET;
+    int length;
+    cout << "Enter desired length: "; cin >> length; cin.ignore();
+    const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    string pass;
+    srand(time(nullptr));
+    for (int i = 0; i < length; i++) {
+        pass += chars[rand() % chars.size()];
+    }
+    cout << GREEN << "Generated password: " << pass << RESET << "\n";
+    audit(currentUser, "Password generator");
+}
+
+// --- Extras ---
 void calendarPeek() { system("cal"); audit(currentUser,"Calendar peek"); }
 void weatherSnapshot() { system("curl -s wttr.in?format=3"); audit(currentUser,"Weather snapshot"); }
-void memoryUsageSummary() { system("free -h"); audit(currentUser,"Memory usage"); }
 void describeCommand() { cout << "ls: Lists directory contents.\n"; audit(currentUser,"Describe command"); }
 
-// --- Menu ---
-void showMenu() {
-    cout << CYAN << "\n=== Console Kompanion Menu ===\n" << RESET;
-    cout << "1) Show system info\n2) Manage files\n3) Package management\n4) Network basics\n";
-    cout << "5) Open editor\n6) Search files\n7) Process manager\n8) Disk cleanup helper\n";
-    cout << "9) User management\n10) System services\n11) System monitoring\n12) Customization\n";
-    cout << "13) Update Checker\n14) Log View\n15) System Health\n16) Session Timer\n";
-    cout << "17) Network Info\n18) Calendar Peek\n19) Weather Snapshot\n20) Memory Usage\n";
-    cout << "21) Network Speed Test\n22) Battery Status(Laptop Only)\n23) Resource Graphs\n";
-    cout << "24) Backup Manager\n25) Service Restart\n26) Clipboard Utilities\n";
-    cout << "27) Download Helper\n28) IP Locator\n29) Port Scanner\n";
-    cout << "30) Password Generator\n";
-    cout << "31) Describe a Command\n32) Favorites\n33) Exit\n";
+// --- Menus ---
+void showMainMenu() {
+    cout << CYAN << "\n=== Kompanion Main Menu ===\n" << RESET;
+    cout << "1) System Commands\n";
+    cout << "2) Network Commands\n";
+    cout << "3) Utilities\n";
+    cout << "4) Extras\n";
+    cout << "5) Favorites\n";
+    cout << "6) Exit\n";
     cout << YELLOW << "Choice: " << RESET;
+}
+
+
+void utilitiesMenu() {
+    int choice;
+    do {
+        cout << CYAN << "\n=== Utilities ===\n" << RESET;
+        cout << "1) Backup Manager\n2) Service Restarter\n3) Clipboard Utility\n4) Download Helper\n5) Password Generator\n0) Back\n";
+        cout << YELLOW << "Choice: " << RESET;
+        cin >> choice; cin.ignore();
+        switch(choice) {
+            case 1: backupManager(); break;
+            case 2: serviceRestarter(); break;
+            case 3: clipboardUtility(); break;
+            case 4: downloadHelper(); break;
+            case 5: passwordGenerator(); break;
+            case 0: break;
+            default: cout << RED << "Invalid choice.\n" << RESET;
+        }
+    } while(choice != 0);
+}
+
+void extrasMenu() {
+    int choice;
+    do {
+        cout << CYAN << "\n=== Extras ===\n" << RESET;
+        cout << "1) Calendar Peek\n2) Weather Snapshot\n3) Describe Command\n0) Back\n";
+        cout << YELLOW << "Choice: " << RESET;
+        cin >> choice; cin.ignore();
+        switch(choice) {
+            case 1: calendarPeek(); break;
+            case 2: weatherSnapshot(); break;
+            case 3: describeCommand(); break;
+            case 0: break;
+            default: cout << RED << "Invalid choice.\n" << RESET;
+        }
+    } while(choice != 0);
 }
 
 // --- Main ---
@@ -315,12 +337,10 @@ int main() {
 
     bool loggedIn = false;
     if (choice == 1) {
-        // Run sign‑up, then immediately ask the user to log in
         signUp(db);
         cout << YELLOW << "Now login to continue.\n" << RESET;
         loggedIn = login(db);
     } else if (choice == 2) {
-        // Direct login
         loggedIn = login(db);
     }
 
@@ -330,57 +350,22 @@ int main() {
         return 0;
     }
 
-    // Load config after login
     loadConfig();
 
-    // Main menu loop
     int menuChoice;
     do {
-        showMenu();
-        if (!(cin >> menuChoice)) {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            continue;
-        }
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
+        showMainMenu();
+        cin >> menuChoice; cin.ignore();
         switch(menuChoice) {
-            case 1: systemInfo(); break;
-            case 2: fileManager(); break;
-            case 3: packageManager(); break;
-            case 4: networkBasics(); break;
-            case 5: openEditor(); break;
-            case 6: searchFiles(); break;
-            case 7: processManager(); break;
-            case 8: diskCleanup(); break;
-            case 9: userManagement(); break;
-            case 10: systemServices(); break;
-            case 11: systemMonitoring(); break;
-            case 12: customization(); break;
-            case 13: updateChecker(); break;
-            case 14: logViewer(); break;
-            case 15: systemHealth(); break;
-            case 16: sessionTimer(); break;
-            case 17: networkInfo(); break;
-            case 18: calendarPeek(); break;
-            case 19: weatherSnapshot(); break;
-            case 20: memoryUsageSummary(); break;
-            case 21: networkSpeedTest(); break;
-            case 22: batteryStatus(); break;
-            case 23: resourceGraphs(); break;
-            case 24: backupManager(); break;
-            case 25: serviceRestarter(); break;
-            case 26: clipboardUtility(); break;
-            case 27: downloadHelper(); break;
-            case 28: ipGeolocation(); break;
-            case 29: portScanner(); break;
-            case 30: passwordGenerator(); break;
-            case 31: describeCommand(); break;
-            case 32: favoritesMenu(); break;
-            case 33: saveConfig(); cout << GREEN << "Goodbye!\n" << RESET; break;
+            case 1: systemMenu(); break;
+            case 2: networkMenu(); break;
+            case 3: utilitiesMenu(); break;
+            case 4: extrasMenu(); break;
+            case 5: favoritesMenu(); break;
+            case 6: saveConfig(); cout << GREEN << "Goodbye!\n" << RESET; break;
             default: cout << RED << "Invalid choice.\n" << RESET;
         }
-    } while(menuChoice != 33);
+    } while(menuChoice != 6);
 
     sqlite3_close(db);
     return 0;
