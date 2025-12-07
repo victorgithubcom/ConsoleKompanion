@@ -20,7 +20,8 @@ static const string YELLOW = "\033[33m";
 string preferredEditor = "nano";
 string defaultFolder   = "~";
 vector<string> favorites;
-string currentUser     = "anonymous";
+string currentUser = "anonymous";
+
 
 // --- Helpers ---
 string timestamp() {
@@ -37,65 +38,39 @@ string generateID() {
 
 // --- Audit Logging ---
 void audit(const string& user, const string& action) {
-    bool newFile = !ifstream("kompanion_audit.log").good();
-    ofstream out("kompanion_audit.log", ios::app);
-    if (newFile) {
-        out << left << setw(20) << "TIMESTAMP"
-        << " | " << setw(12) << "USER"
-        << " | " << "ACTION" << "\n";
-        out << string(60, '-') << "\n";
+    ofstream log("kompanion_audit.log", ios::app);  // append mode
+    if (log.is_open()) {
+        log << "[" << user << "] " << action << "\n";
+        log.close();
+    } else {
+        cerr << "Could not open audit log file.\n";
     }
-    out << left << setw(20) << timestamp()
-    << " | " << setw(12) << user
-    << " | " << action << "\n";
-}
-
-// --- SQLite Setup ---
-void initDB(sqlite3* &db) {
-    if (sqlite3_open("users.db", &db)) {
-        cerr << "Can't open DB\n";
-        exit(1);
-    }
-    const char* sql = "CREATE TABLE IF NOT EXISTS users("
-    "username TEXT PRIMARY KEY,"
-    "id TEXT NOT NULL);";
-    sqlite3_exec(db, sql, nullptr, nullptr, nullptr);
 }
 
 // --- Sign Up / Login ---
-void signUp(sqlite3* db) {
-    cout << CYAN << "Enter new username: " << RESET;
-    string username; cin >> username;
-    string id = generateID();
 
-    string sql = "INSERT INTO users(username,id) VALUES('" + username + "','" + id + "');";
-    if (sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr) == SQLITE_OK) {
-        cout << GREEN << "Signup successful! Your ID is: " << id << RESET << "\n";
-    } else {
-        cout << RED << "Username already exists.\n" << RESET;
-    }
+
+static inline string trim(const string& s) {
+    size_t a = s.find_first_not_of(" \t\r\n");
+    size_t b = s.find_last_not_of(" \t\r\n");
+    if (a == string::npos) return "";
+    return s.substr(a, b - a + 1);
 }
 
-bool login(sqlite3* db) {
-    cout << CYAN << "Enter username: " << RESET;
-    string username; cin >> username;
-    cout << CYAN << "Enter ID: " << RESET;
-    string id; cin >> id;
-
-    string sql = "SELECT * FROM users WHERE username='" + username + "' AND id='" + id + "';";
+bool isLessonComplete(sqlite3* db, const string& user, const string& lesson) {
+    string sql = "SELECT completed FROM progress WHERE user='" + user +
+    "' AND lesson='" + lesson + "';";
     sqlite3_stmt* stmt;
+    bool result = false;
     if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
         if (sqlite3_step(stmt) == SQLITE_ROW) {
-            cout << GREEN << "Login successful!\n" << RESET;
-            currentUser = username;
-            sqlite3_finalize(stmt);
-            return true;
+            result = sqlite3_column_int(stmt, 0) == 1;
         }
     }
-    cout << RED << "Login failed.\n" << RESET;
     sqlite3_finalize(stmt);
-    return false;
+    return result;
 }
+
 
 
 // --- Config / Favorites ---
@@ -204,6 +179,9 @@ void filesystemBasicsLesson() {
 
     cout << YELLOW << "Press Enter to return to Tutorials Menu..." << RESET;
     getline(cin, dummy);
+    audit(currentUser, "Completed lesson: Filesystem Basics");
+
+
 }
 
 // --- Lesson: Text Editing Basics ---
@@ -248,6 +226,8 @@ void textEditingLesson() {
 
     cout << YELLOW << "Press Enter to return to Tutorials Menu..." << RESET;
     getline(cin, dummy);
+    audit(currentUser, "Text Editing Basics");
+
 }
 
 // --- Lesson: Permissions Basics ---
@@ -292,16 +272,17 @@ void permissionsLesson() {
 
     cout << YELLOW << "Press Enter to return to Tutorials Menu..." << RESET;
     getline(cin, dummy);
+    audit(currentUser, "Permission Basics");
+
 }
 
 
 void tutorialsMenu() {
-    cout << CYAN << "\n=== Tutorials Menu ===\n" << RESET;
+    cout << "\n=== Tutorials Menu ===\n";
     cout << "1) Filesystem Basics\n";
     cout << "2) Text Editing Basics\n";
     cout << "3) Permissions Basics\n";
-    cout << "0) Back\n";
-    cout << YELLOW << "Choice: " << RESET;
+    cout << "0) Back\nChoice: ";
 
     string input;
     getline(cin, input);
@@ -310,8 +291,10 @@ void tutorialsMenu() {
     else if (input == "2") textEditingLesson();
     else if (input == "3") permissionsLesson();
     else if (input == "0") return;
-    else cout << RED << "Invalid choice.\n" << RESET;
+    else cout << "Invalid choice.\n";
 }
+
+
 
 
 
@@ -407,32 +390,13 @@ void extrasMenu() {
 
 
 // --- Main ---
+// --- Main ---
 int main() {
-    sqlite3* db;
-    initDB(db);
-
+    cout << CYAN << "----------------------\n" << RESET;
     cout << CYAN << "Welcome to Kompanion\n" << RESET;
-    cout << "1) Sign Up\n2) Login\nChoice: ";
-    int choice;
-    cin >> choice;
+    cout << CYAN << "----------------------\n" << RESET;
 
-    bool loggedIn = false;
-    if (choice == 1) {
-        signUp(db);
-        cout << YELLOW << "Now login to continue.\n" << RESET;
-        loggedIn = login(db);
-    } else if (choice == 2) {
-        loggedIn = login(db);
-    } else if (choice == 2) {
-        loggedIn = login(db);
-    }
-
-    if (!loggedIn) {
-        cout << RED << "Exiting...\n" << RESET;
-        sqlite3_close(db);
-        return 0;
-    }
-
+    // Load user preferences (editor, folder, favorites)
     loadConfig();
 
     int menuChoice;
@@ -440,13 +404,14 @@ int main() {
         showMainMenu();
         cin >> menuChoice;
         cin.ignore();
+
         switch(menuChoice) {
             case 1: systemMenu(); break;
             case 2: networkMenu(); break;
             case 3: utilitiesMenu(); break;
             case 4: extrasMenu(); break;
             case 5: favoritesMenu(); break;
-            case 6: tutorialsMenu(); break;   // NEW Tutorials integration
+            case 6: tutorialsMenu(); break;   // Tutorials integration
             case 7:
                 saveConfig();
                 cout << GREEN << "Goodbye!\n" << RESET;
@@ -456,7 +421,6 @@ int main() {
         }
     } while(menuChoice != 7);
 
-    sqlite3_close(db);
     return 0;
 }
 
