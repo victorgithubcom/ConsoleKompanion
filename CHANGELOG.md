@@ -13,9 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 - Stopped tutorialMenu from spamming the message when one tutorial is done.
+- Fixed audit log system
 
 ### Changed
-- N/A
+- Removed Login and Sign up systems.
 
 
 ## [1.1.1] - 2025-12-06
